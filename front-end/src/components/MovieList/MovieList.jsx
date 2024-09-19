@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import MovieCard from '../moviecard/Moviecard';
+import MovieCard from '../moviecard/MovieCard';
 import './Movielist.css';
 import { useNavigate } from 'react-router-dom';
 
