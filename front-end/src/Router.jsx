@@ -11,12 +11,12 @@ function AppRouter() {
     <Router>
       <Navbar />
       <Routes>
-        <Route path="/movies/:id" element={<MovieCard />} />
+        <Route path="/movies/:id" element={<MovieCard/>} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignUpPage />} />
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/" element={<MovieList />} />
-        <Route path="/movie/:id" element={MovieCard} />
+
       </Routes>
     </Router>
   );
