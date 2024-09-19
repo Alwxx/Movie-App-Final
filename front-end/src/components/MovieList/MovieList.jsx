@@ -21,7 +21,7 @@ const MovieList = () => {
     {
       id: '66d6d8380d583f8a4ac9fd5b',
       title: 'Alien:Romulus',
-      poster: '/src/assets/alien.jpg',
+      poster: 'https://imgs.search.brave.com/HTKoJGIKVlbhskbnxWHeD4R6TamRPkJecuGWhLmHPYc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMxLmNvbGxpZGVy/aW1hZ2VzLmNvbS93/b3JkcHJlc3Mvd3At/Y29udGVudC91cGxv/YWRzLzIwMjQvMDYv/YWxpZW4tcm9tdWx1/cy1maWxtLXBvc3Rl/ci5qcGc',
       description: 'Romulus is a 2024 American science fiction horror film directed by Fede Álvarez and written by Álvarez and Rodo Sayagues',
       genre: 'Fiction Horror',
       rating: '7/10',
@@ -29,7 +29,7 @@ const MovieList = () => {
     {
       id: '66d6d94f0d583f8a4ac9fd5e',
       title: 'The Crow',
-      poster: '/src/assets/crow.jpg',
+      poster: 'https://imgs.search.brave.com/TrMLmOaLK4jvJR4Nx5wZJr0DXv-DMhSl70tslX6Kxi0/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMxLmNicmltYWdl/cy5jb20vd29yZHBy/ZXNzL3dwLWNvbnRl/bnQvdXBsb2Fkcy8y/MDI0LzA3L3RoZS1j/cm93LTIwMjQtcG9z/dGVyLXdpdGgtYmls/bC1za2Fyc2dhcmQt/c3Vycm91bmRlZC1i/eS1jcm93cy5qcGc',
       description: 'The Crow is a 2024 American gothic superhero film directed by Rupert Sanders',
       genre: 'Gothic Superhero',
       rating: '4/10',
@@ -37,7 +37,7 @@ const MovieList = () => {
     {
       id: '66d6da350d583f8a4ac9fd61',
       title: 'Inside Out 2',
-      poster: '/src/assets/insideout.jpg',
+      poster: 'https://imgs.search.brave.com/OW0ALA1woB0qTIR0kzh3w5wz-34vlOvDjClj8KL_2YM/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pMC53/cC5jb20vcGl4YXJw/b3N0LmNvbS93cC1j/b250ZW50L3VwbG9h/ZHMvMjAyNC8wMy9J/bnNpZGUtT3V0LTIt/UG9zdGVyLmpwZWc_/cmVzaXplPTEwMDAs/MTQ4MSZzc2w9MQ',
       description: 'Inside Out 2 is a 2024 American animated coming-of-age film produced by Pixar Animation Studios for Walt Disney Pictures',
       genre: 'Animated',
       rating: '8/10',
