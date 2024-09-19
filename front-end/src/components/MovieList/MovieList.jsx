@@ -13,7 +13,7 @@ const MovieList = () => {
     {
       id: "66d6d634ae232139c8f2b641",
       title: 'Deadpool & Wolverine',
-      poster: '/src/assets/deadpool.jpg',
+      poster: 'https://imgs.search.brave.com/9jR0pwO8V1iTyTV5Ab04oG0ADXfy7U_UiJD-NoGo100/rs:fit:860:0:0:0/g:ce/aHR0cDovL3d3dy5p/bXBhd2FyZHMuY29t/LzIwMjQvcG9zdGVy/cy9kZWFkcG9vbF9h/bmRfd29sdmVyaW5l/X3ZlcjYuanBn',
       description: 'Deadpool & Wolverine is a 2024 American superhero film based on Marvel Comics featuring the characters Deadpool and Wolverine.',
       genre: 'Superhero Comedy',
       rating: '8/10',
