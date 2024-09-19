@@ -4,7 +4,7 @@ import SignUpPage from "./pages/SignUpPage";
 import ProfilePage from "./pages/ProfilePage";
 import Navbar from "./components/navbar/Navbar";
 import MovieList from "./components/MovieList/MovieList";
-import MovieCard from "./components/moviecard/Moviecard";
+import MovieCard from "./components/moviecard/MovieCard";
 
 function AppRouter() {
   return (
