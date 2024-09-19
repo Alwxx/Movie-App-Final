@@ -1,0 +1,14 @@
+
+body.light {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+body.dark {
+  background-color: #1a1a1a;
+  color: #ffffff; 
+}
+
+h1, h2, h3, h4, h5, h6, p, span, a, button {
+  transition: color 0.3s, background-color 0.3s;
+}
