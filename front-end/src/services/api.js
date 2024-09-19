@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:3001/api',
+    baseURL: 'https://movie-app-final-serverside.vercel.app/',
     headers: {
         'Authorization': 'Bearer YOUR_GITHUB_TOKEN',
         'Content-Type': 'application/json',
