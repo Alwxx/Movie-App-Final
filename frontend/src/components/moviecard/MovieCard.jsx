@@ -1,95 +1,132 @@
 import { useParams } from "react-router-dom";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import ThemeContext from "../../context/ThemeContext";
-import "./MovieCard.css"; 
 import RatingStars from "../ratingstars/RatingStars";
-
-const movies = [
-  {
-    id: "66d6d634ae232139c8f2b641",
-    title: "Deadpool & Wolverine",
-    poster: "https://imgs.search.brave.com/9jR0pwO8V1iTyTV5Ab04oG0ADXfy7U_UiJD-NoGo100/rs:fit:860:0:0:0/g:ce/aHR0cDovL3d3dy5p/bXBhd2FyZHMuY29t/LzIwMjQvcG9zdGVy/cy9kZWFkcG9vbF9h/bmRfd29sdmVyaW5l/X3ZlcjYuanBn",
-    description:
-      "Deadpool & Wolverine is a 2024 American superhero film based on Marvel Comics featuring the characters Deadpool and Wolverine.",
-    genre: "Superhero Comedy",
-    rating: "8/10",
-  },
-  {
-    id: "66d6d8380d583f8a4ac9fd5b",
-    title: "Alien:Romulus",
-    poster: "https://imgs.search.brave.com/HTKoJGIKVlbhskbnxWHeD4R6TamRPkJecuGWhLmHPYc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMxLmNvbGxpZGVy/aW1hZ2VzLmNvbS93/b3JkcHJlc3Mvd3At/Y29udGVudC91cGxv/YWRzLzIwMjQvMDYv/YWxpZW4tcm9tdWx1/cy1maWxtLXBvc3Rl/ci5qcGc",
-    description:
-      "Romulus is a 2024 American science fiction horror film directed by Fede Álvarez and written by Álvarez and Rodo Sayagues",
-    genre: "Fiction Horror",
-    rating: "7/10",
-  },
-  {
-    id: "66d6d94f0d583f8a4ac9fd5e",
-    title: "The Crow",
-    poster: "https://imgs.search.brave.com/TrMLmOaLK4jvJR4Nx5wZJr0DXv-DMhSl70tslX6Kxi0/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMxLmNicmltYWdl/cy5jb20vd29yZHBy/ZXNzL3dwLWNvbnRl/bnQvdXBsb2Fkcy8y/MDI0LzA3L3RoZS1j/cm93LTIwMjQtcG9z/dGVyLXdpdGgtYmls/bC1za2Fyc2dhcmQt/c3Vycm91bmRlZC1i/eS1jcm93cy5qcGc",
-    description:
-      "The Crow is a 2024 American gothic superhero film directed by Rupert Sanders",
-    genre: "Gothic Superhero",
-    rating: "4/10",
-  },
-  {
-    id: "66d6da350d583f8a4ac9fd61",
-    title: "Inside Out 2",
-    poster: "https://imgs.search.brave.com/OW0ALA1woB0qTIR0kzh3w5wz-34vlOvDjClj8KL_2YM/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pMC53/cC5jb20vcGl4YXJw/b3N0LmNvbS93cC1j/b250ZW50L3VwbG9h/ZHMvMjAyNC8wMy9J/bnNpZGUtT3V0LTIt/UG9zdGVyLmpwZWc_/cmVzaXplPTEwMDAs/MTQ4MSZzc2w9MQ",
-    description:
-      "Inside Out 2 is a 2024 American animated coming-of-age film produced by Pixar Animation Studios for Walt Disney Pictures",
-    genre: "Animated",
-    rating: "8/10",
-  },
-];
+import { fetchMovieDetails } from "../../services/movieApiService";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 const MovieCard = () => {
   const { id } = useParams();
-  const movie = movies.find((m) => m.id === id);
   const { theme } = useContext(ThemeContext);
+  const [movie, setMovie] = useState(null);
   const [review, setReview] = useState("");
+  const [reviews, setReviews] = useState([]);
   const [rating, setRating] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch Movie Details and Reviews
+    const fetchMovieInfo = async () => {
+      try {
+        const movieData = await fetchMovieDetails(id);
+        setMovie(movieData);
+
+        // Fetch reviews
+        const reviewsData = await axios.get(
+          `https://api.themoviedb.org/3/movie/${id}/reviews`,
+          {
+            params: { api_key: "c56e629d2ce4c5a38303801125569999" },
+          }
+        );
+        setReviews(reviewsData.data.results);
+        setIsLoading(false);
+      } catch (error) {
+        toast.error("Error fetching movie details.");
+        console.error("Error fetching movie details:", error);
+        setIsLoading(false);
+      }
+    };
+    fetchMovieInfo();
+  }, [id]);
+
   const handleReviewChange = (e) => {
     setReview(e.target.value);
   };
 
   const handleSubmitReview = () => {
-   window.alert(`Your review has been submitted successfully: ${review}`)
+    toast.success(`Your review has been submitted successfully: ${review}`);
     setReview("");
   };
 
   return (
-    <div className={`movie-card-container ${theme}`}>
-      {movie ? (
-        <div className={`movie-card ${theme}`}>
-          <div className="movie-poster">
-            <img src={movie.poster} alt={`${movie.title} Poster`} />
+    <div className={`min-h-screen py-8 px-4 bg-gray-900 ${theme}`}>
+      {isLoading ? (
+        <p className="text-center text-white">Loading movie details...</p>
+      ) : movie ? (
+        <div className="flex flex-col md:flex-row items-start max-w-4xl mx-auto bg-gray-800 text-white rounded-lg shadow-lg p-6 gap-8">
+          {/* Movie Poster */}
+          <div className="w-full md:w-1/3">
+            <img
+              src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+              alt={`${movie.title} Poster`}
+              className="rounded-lg shadow-lg"
+            />
           </div>
-          <div className="movie-details">
-            <h2>{movie.title}</h2>
-            <p>{movie.description}</p>
-            <p><strong>Genre:</strong> {movie.genre}</p>
-            <p><strong>Rating:</strong> {movie.rating}</p>
+
+          {/* Movie Details */}
+          <div className="w-full md:w-2/3 flex flex-col gap-4">
+            <h2 className="text-3xl font-bold">{movie.title}</h2>
+            <p className="text-lg">{movie.overview}</p>
+            <p>
+              <strong>Release Date:</strong> {movie.release_date}
+            </p>
+            <p>
+              <strong>Genre:</strong>{" "}
+              {movie.genres && movie.genres.map((g) => g.name).join(", ")}
+            </p>
+            <p>
+              <strong>Rating:</strong> {movie.vote_average} / 10
+            </p>
+
+            {/* Add Ratings */}
             <div className="rating-section">
-            <RatingStars rating={rating} setRating={setRating} editable={true} /> {/* Add RatingStars */}
+              <strong>Your Rating:</strong>
+              <RatingStars
+                rating={rating}
+                setRating={setRating}
+                editable={true}
+              />
             </div>
-            
-            <div className="review-section">
-              <h3>Write a Review</h3>
+
+            {/* Reviews Section */}
+            <div className="review-section mt-6">
+              <h3 className="text-2xl font-bold mb-4">Reviews</h3>
+              {reviews.length > 0 ? (
+                reviews.map((review) => (
+                  <div
+                    key={review.id}
+                    className="bg-gray-700 p-4 mb-4 rounded-lg"
+                  >
+                    <p className="font-bold">{review.author}</p>
+                    <p>{review.content}</p>
+                  </div>
+                ))
+              ) : (
+                <p>No reviews available for this movie.</p>
+              )}
+            </div>
+
+            {/* Write a Review */}
+            <div className="mt-6">
+              <h3 className="text-2xl font-bold mb-4">Write a Review</h3>
               <textarea
-                className="review-input"
+                className="w-full p-2 mb-4 rounded-lg bg-gray-700 text-white"
                 value={review}
                 onChange={handleReviewChange}
                 placeholder="Write your review here..."
               />
-              <button className="submit-btn" onClick={handleSubmitReview}>
+              <button
+                className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition"
+                onClick={handleSubmitReview}
+              >
                 Submit Review
               </button>
             </div>
           </div>
         </div>
       ) : (
-        <p>Movie not found.</p>
+        <p className="text-center text-white">Movie not found.</p>
       )}
     </div>
   );

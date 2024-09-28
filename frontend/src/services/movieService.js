@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3001/api/movies'; 
+const API_URL = import.meta.env.PROD ? `${import.meta.env.VITE_SERVER_API_URI}/api/movies` : 'http://localhost:3001/api/movies'; 
 
 export const fetchMovieById = async (id) => {
   try {

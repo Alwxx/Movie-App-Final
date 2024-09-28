@@ -1,140 +1,230 @@
 import { useEffect, useState } from "react";
-import MovieCard from "../moviecard/MovieCard";
-import "./Movielist.css";
-import { useNavigate } from "react-router-dom";
-import { fetchMovies } from "../../services/movieApiService";
+import { toast } from "react-toastify";
+import { Splide, SplideSlide } from "@splidejs/react-splide";
+import { Link } from "react-router-dom";
+import "@splidejs/react-splide/css";
+import clsx from "clsx";
 
-const MovieList = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMovie, setSelectedMovie] = useState(null);
-  const [selectedGenre, setSelectedGenre] = useState("All");
+import { searchMovies } from "../../services/movieApiService";
+import { discoverMovies } from "../../services/movieApiService";
+import Spinner from "../UI/Spinner";
+import SelectableSearch from "../UI/SelectableSearch";
+import { MagnifyingGlassIcon } from "@heroicons/react/20/solid";
+
+function MovieList() {
+  const [activeSlide, setActiveSlide] = useState(0);
   const [movies, setMovies] = useState([]);
-  const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const getMovies = async () => {
-      const fetchedMovies = await fetchMovies(searchTerm);
-      setMovies(fetchedMovies);
-    };
-    getMovies();
-  }, [searchTerm]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedGenre, setSelectedGenre] = useState({
+    id: "All",
+    name: "All",
+  });
 
-  const defaultMovies = [
+  const genreValues = [
+    { id: "All", name: "All" },
     {
-      id: "66d6d634ae232139c8f2b641",
-      title: "Deadpool & Wolverine",
-      poster:
-        "https://imgs.search.brave.com/9jR0pwO8V1iTyTV5Ab04oG0ADXfy7U_UiJD-NoGo100/rs:fit:860:0:0:0/g:ce/aHR0cDovL3d3dy5p/bXBhd2FyZHMuY29t/LzIwMjQvcG9zdGVy/cy9kZWFkcG9vbF9h/bmRfd29sdmVyaW5l/X3ZlcjYuanBn",
-      description:
-        "Deadpool & Wolverine is a 2024 American superhero film based on Marvel Comics featuring the characters Deadpool and Wolverine.",
-      genre: "Superhero Comedy",
-      rating: "8/10",
+      id: 28,
+      name: "Action",
     },
     {
-      id: "66d6d8380d583f8a4ac9fd5b",
-      title: "Alien:Romulus",
-      poster:
-        "https://imgs.search.brave.com/HTKoJGIKVlbhskbnxWHeD4R6TamRPkJecuGWhLmHPYc/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMxLmNvbGxpZGVy/aW1hZ2VzLmNvbS93/b3JkcHJlc3Mvd3At/Y29udGVudC91cGxv/YWRzLzIwMjQvMDYv/YWxpZW4tcm9tdWx1/cy1maWxtLXBvc3Rl/ci5qcGc",
-      description:
-        "Romulus is a 2024 American science fiction horror film directed by Fede Álvarez and written by Álvarez and Rodo Sayagues",
-      genre: "Fiction Horror",
-      rating: "7/10",
+      id: 12,
+      name: "Adventure",
     },
     {
-      id: "66d6d94f0d583f8a4ac9fd5e",
-      title: "The Crow",
-      poster:
-        "https://imgs.search.brave.com/TrMLmOaLK4jvJR4Nx5wZJr0DXv-DMhSl70tslX6Kxi0/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9zdGF0/aWMxLmNicmltYWdl/cy5jb20vd29yZHBy/ZXNzL3dwLWNvbnRl/bnQvdXBsb2Fkcy8y/MDI0LzA3L3RoZS1j/cm93LTIwMjQtcG9z/dGVyLXdpdGgtYmls/bC1za2Fyc2dhcmQt/c3Vycm91bmRlZC1i/eS1jcm93cy5qcGc",
-      description:
-        "The Crow is a 2024 American gothic superhero film directed by Rupert Sanders",
-      genre: "Gothic Superhero",
-      rating: "4/10",
+      id: 16,
+      name: "Animation",
     },
     {
-      id: "66d6da350d583f8a4ac9fd61",
-      title: "Inside Out 2",
-      poster:
-        "https://imgs.search.brave.com/OW0ALA1woB0qTIR0kzh3w5wz-34vlOvDjClj8KL_2YM/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pMC53/cC5jb20vcGl4YXJw/b3N0LmNvbS93cC1j/b250ZW50L3VwbG9h/ZHMvMjAyNC8wMy9J/bnNpZGUtT3V0LTIt/UG9zdGVyLmpwZWc_/cmVzaXplPTEwMDAs/MTQ4MSZzc2w9MQ",
-      description:
-        "Inside Out 2 is a 2024 American animated coming-of-age film produced by Pixar Animation Studios for Walt Disney Pictures",
-      genre: "Animated",
-      rating: "8/10",
+      id: 35,
+      name: "Comedy",
+    },
+    {
+      id: 80,
+      name: "Crime",
+    },
+    {
+      id: 99,
+      name: "Documentary",
+    },
+    {
+      id: 18,
+      name: "Drama",
+    },
+    {
+      id: 10751,
+      name: "Family",
+    },
+    {
+      id: 14,
+      name: "Fantasy",
+    },
+    {
+      id: 36,
+      name: "History",
+    },
+    {
+      id: 27,
+      name: "Horror",
+    },
+    {
+      id: 10402,
+      name: "Music",
+    },
+    {
+      id: 9648,
+      name: "Mystery",
+    },
+    {
+      id: 10749,
+      name: "Romance",
+    },
+    {
+      id: 878,
+      name: "Science Fiction",
+    },
+    {
+      id: 10770,
+      name: "TV Movie",
+    },
+    {
+      id: 53,
+      name: "Thriller",
+    },
+    {
+      id: 10752,
+      name: "War",
+    },
+    {
+      id: 37,
+      name: "Western",
     },
   ];
 
-  const handlePosterClick = (movie) => {
-    navigate(`/movies/${movie.id}`);
-    setSelectedMovie(movie);
+  useEffect(() => {
+    const fetchMovies = async () => {
+      setIsLoading(true);
+      try {
+        let data;
+        if (!searchTerm) data = await discoverMovies();
+        else data = await searchMovies(searchTerm);
+
+        let finalMovies = data.filter((mov) => mov.poster_path);
+        if (selectedGenre.id != "All") {
+          finalMovies = finalMovies.filter((mov) =>
+            mov.genre_ids.includes(selectedGenre.id)
+          );
+        }
+        setMovies(finalMovies);
+      } catch (error) {
+        toast.error(
+          "We're having troubles connecting to our database. We're working on it!"
+        );
+        console.error("Error fetching movies:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchMovies();
+  }, [searchTerm, selectedGenre]);
+
+  const handleMove = (splide, currentSlide) => {
+    setActiveSlide(currentSlide);
   };
 
-  const filteredMovies = defaultMovies.filter((movie) => {
-    const matchesSearch = movie.title
-      .toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchesGenre =
-      selectedGenre === "All" || movie.genre === selectedGenre;
-    return matchesSearch && matchesGenre;
-  });
-
   return (
-    <div className="movie-list">
-      {/* Search Bar */}
-      <input
-        type="text"
-        placeholder="Search for a movie..."
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-        className="search-bar"
-      />
+    <div className="min-h-[90vh] pt-8 dark:bg-gray-800 bg-gray-200 transition-all flex items-center justify-center pb-[35px] relative overflow-hidden flex-col gap-24">
+      <div className="z-10 bg-gray-200 dark:bg-[#121212] shadow-xl transition-all w-[80vw] p-8">
+        <div className="flex flex-col gap-4 max-w-[500px] m-auto">
+          <div>
+            <label className="block text-sm font-medium leading-6 dark:text-white text-gray-900 pb-2">
+              Search
+            </label>
+            <div className="flex items-center bg-white dark:bg-gray-800 rounded overflow-hidden">
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                type="text"
+                placeholder="Search for a movie"
+                className="block w-11/12 px-2 rounded-md border-0 py-1.5 dark:bg-gray-800 dark:text-white  text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-red-600 sm:text-sm sm:leading-6"
+              />
+              <MagnifyingGlassIcon className="w-1/12 size-6 text-gray-400" />
+            </div>
+          </div>
 
-      {/* Genre Filter */}
-      <select
-        value={selectedGenre}
-        onChange={(e) => setSelectedGenre(e.target.value)}
-        className="genre-filter"
-      >
-        <option value="All">All Genres</option>
-        <option value="Superhero Comedy">Superhero Comedy</option>
-        <option value="Fiction Horror">Fiction Horror</option>
-        <option value="Gothic Superhero">Gothic Superhero</option>
-        <option value="Animated">Animated</option>
-      </select>
-
-      {/* Movie Posters */}
-      <div className="posters">
-        {searchTerm && movies.length ? (
-          movies.map((movie) => (
-            <img
-              key={movie.id}
-              src={
-                movie.poster_path
-                  ? `https://image.tmdb.org/t/p/w500/${movie.poster_path}`
-                  : movie.poster
-              }
-              alt={movie.title}
-              onClick={() => handlePosterClick(movie)}
-              className="poster-image"
-            />
-          ))
-        ) : searchTerm && !movies.length ? (
-          <p>No Movies found</p>
-        ) : (
-          filteredMovies.map((movie) => (
-            <img
-              key={movie.id}
-              src={movie.poster}
-              alt={movie.title}
-              onClick={() => handlePosterClick(movie)}
-              className="poster-image"
-            />
-          ))
-        )}
+          {/* Genre Filter */}
+          <SelectableSearch
+            values={genreValues}
+            onSelect={(selectedValue) =>
+              setSelectedGenre(
+                genreValues.find((val) => val.name == selectedValue)
+              )
+            }
+          />
+        </div>
       </div>
 
-      {/* Selected Movie Card */}
-      {selectedMovie && <MovieCard movie={selectedMovie} />}
+      {movies.length && movies[activeSlide].backdrop_path ? (
+        <div className="top-1/2 -translate-x-1/2 -translate-y-1/2 w-full absolute left-1/2 pointer-events-none imageBg">
+          <img
+            className="w-full"
+            src={`https://image.tmdb.org/t/p/w1280${movies[activeSlide].backdrop_path}`}
+          />
+        </div>
+      ) : (
+        ""
+      )}
+      {isLoading ? (
+        <Spinner width="w-12" height="h-12" />
+      ) : movies.length ? (
+        <div className="h-full relative">
+          <Splide
+            onMove={handleMove}
+            aria-label="Discover Movies"
+            options={{
+              rewind: true,
+              perPage: 6.5,
+              gap: "2rem",
+              speed: 1000,
+              autoplay: true,
+              interval: 5000,
+              updateOnMove: true,
+              pagination: false,
+              arrows: false,
+              focus: "center",
+              breakpoints: {
+                480: {
+                  perPage: 1,
+                },
+              },
+            }}
+          >
+            {movies.map(
+              (movie, index) =>
+                movie.poster_path && (
+                  <SplideSlide
+                    key={movie.id}
+                    className={clsx("transition-all")}
+                  >
+                    <Link to={`/movies/${movie.id}`} className="flex h-full">
+                      <img
+                        className="object-cover"
+                        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+                        alt={movie.title}
+                      />
+                    </Link>
+                  </SplideSlide>
+                )
+            )}
+          </Splide>
+        </div>
+      ) : (
+        <p className="text-gray-900 dark:text-white">No movies found</p>
+      )}
     </div>
   );
-};
+}
 
 export default MovieList;

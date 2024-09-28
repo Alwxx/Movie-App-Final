@@ -1,3 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.loader {
+  border-bottom-color: #50145c;
+  border-radius: 50%;
+  display: inline-block;
+  box-sizing: border-box;
+  animation: rotation 1s linear infinite;
+}
+
+@keyframes rotation {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.imageBg:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #24191975;
+  z-index: 2;
+  backdrop-filter: blur(5px);
+}
+.splide__slide.is-active {
+  box-shadow: 0 0 4px 2px rgb(255 0 0);
+}
+
+.splide__slide {
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
+
+.splide__list {
+  align-items: baseline;
+}
+
 :root {
   --background-color: white;
   --text-color: black;
