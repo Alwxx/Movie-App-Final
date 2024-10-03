@@ -16,9 +16,7 @@ connectDB();
 app.use(express.json());
 app.use(
   cors({
-    origin: [
-      process.env.NODE_ENV == "production" ? process.env.CLIENT_URL : "*",
-    ],
+    origin: ["*"],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTION"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
