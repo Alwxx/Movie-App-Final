@@ -26,7 +26,7 @@ app.use(
 app.use("/api/users", userRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/movies", movieRouter);
-app.use("/api,genre", genreRouter);
+app.use("/api/genre", genreRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to movie review and rating app - By Alwin Sunny");
