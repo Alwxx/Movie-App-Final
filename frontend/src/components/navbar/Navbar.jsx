@@ -47,7 +47,7 @@ export default function Navbar() {
             <span className="sr-only">CineHub</span>
             <img
               alt=""
-              src="https://tailwindui.com/img/logos/mark.svg?color=red&shade=600"
+              src="https://i.postimg.cc/P5YSJ0qs/Untitled-2.png"
               className="h-8 w-auto"
             />
           </Link>
@@ -138,7 +138,7 @@ export default function Navbar() {
               <span className="sr-only">Your Company</span>
               <img
                 alt=""
-                src="https://tailwindui.com/img/logos/mark.svg?color=red&shade=600"
+                src="https://i.postimg.cc/P5YSJ0qs/Untitled-2.png"
                 className="h-8 w-auto"
               />
             </Link>

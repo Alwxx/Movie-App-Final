@@ -43,7 +43,7 @@ export default function LoginPage() {
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <img
             alt="CineHub"
-            src="https://tailwindui.com/img/logos/mark.svg?color=red&shade=600"
+            src="https://i.postimg.cc/P5YSJ0qs/Untitled-2.png"
             className="mx-auto h-10 w-auto"
           />
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight dark:text-white text-gray-900">
