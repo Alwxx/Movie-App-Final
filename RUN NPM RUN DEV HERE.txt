@@ -1,0 +1,7 @@
+Go to backend
+"npm i"
+
+then in frontend
+"npm i"
+
+then return to this folder OUTSIDE both, and run npm run dev and everything should run
