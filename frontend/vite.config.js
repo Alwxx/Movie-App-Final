@@ -6,8 +6,8 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: "http://localhost:3001", // The target server for API requests
-        changeOrigin: true, // Needed for virtual hosted sites
+        target: "https://movie-app-final-zeta.vercel.app/",
+        changeOrigin: true,
       },
     },
   },
