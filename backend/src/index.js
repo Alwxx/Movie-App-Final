@@ -14,7 +14,13 @@ const port = 3001;
 connectDB();
 
 app.use(express.json());
-
+app.use(
+  cors({
+    origin: "https://movie-app-client-ashy.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTION"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use("/api/users", userRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/movies", movieRouter);
