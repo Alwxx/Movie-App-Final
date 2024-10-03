@@ -53,8 +53,6 @@ function MoviesHero() {
             onMove={handleMove}
             aria-label="Discover Movies"
             options={{
-              type: "loop",
-              rewind: true,
               perPage: 6.5,
               gap: "2rem",
               speed: 1000,
