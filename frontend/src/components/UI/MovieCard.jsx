@@ -7,7 +7,7 @@ import clsx from "clsx";
 import AuthContext from "../../context/AuthContext";
 import { useHandleError } from "../../utils/functions";
 import api from "../../services/api";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Spinner from "./Spinner";
 
 const MovieCard = ({ movie, isWishlisted, showLoader = false }) => {
@@ -15,9 +15,16 @@ const MovieCard = ({ movie, isWishlisted, showLoader = false }) => {
   const [animating, setAnimating] = useState(false);
   const { token } = useContext(AuthContext);
   const handleError = useHandleError();
+  const navigate = useNavigate();
 
   const updateWishlist = async () => {
     if (!movie || !movie.id) return;
+    if (!token) {
+      //User is not logged in
+      toast.info("Please login first");
+      navigate("/login");
+      return;
+    }
     const previousState = inWishlist;
 
     setInWishlist(!inWishlist);

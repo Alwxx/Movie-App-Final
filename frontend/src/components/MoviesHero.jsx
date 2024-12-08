@@ -29,7 +29,7 @@ function MoviesHero() {
       }
     };
 
-    if (token) fetchMovies();
+    fetchMovies();
   }, [token]);
 
   const handleMove = (splide, currentSlide) => {

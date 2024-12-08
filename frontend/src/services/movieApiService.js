@@ -17,24 +17,30 @@ export const discoverMovies = async (token) => {
 
     const movies = tmdbResponse.data.results;
 
-    // Fetch user's favorites from your backend
-    const userFavoritesResponse = await api.get("/api/movies/favorites", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    //Only fetch if there's a token (user is logged in):
+    if (token) {
+      // Fetch user's favorites from your backend
+      const userFavoritesResponse = await api.get("/api/movies/favorites", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-    const userFavorites = userFavoritesResponse.data.data;
+      const userFavorites = userFavoritesResponse.data.data;
 
-    // Mark movies as wishlisted if they exist in user's favorites
-    const enrichedMovies = movies.map((movie) => ({
+      // Mark movies as wishlisted if they exist in user's favorites
+      const enrichedMovies = movies.map((movie) => ({
+        ...movie,
+        isWishlisted: userFavorites.some(
+          (fav) => fav.movieId === movie.id.toString()
+        ),
+      }));
+      return enrichedMovies;
+    }
+    return movies.map((movie) => ({
       ...movie,
-      isWishlisted: userFavorites.some(
-        (fav) => fav.movieId === movie.id.toString()
-      ),
+      isWishlisted: false,
     }));
-
-    return enrichedMovies;
   } catch (error) {
     console.error("Error fetching movies or favorites:", error);
     throw error;
