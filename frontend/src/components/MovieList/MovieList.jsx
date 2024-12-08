@@ -77,8 +77,8 @@ function MovieList() {
       }
     };
 
-    fetchMovies();
-  }, [searchTerm, selectedGenre]);
+    if (token) fetchMovies();
+  }, [searchTerm, selectedGenre, token]);
 
   const handleMove = (splide, currentSlide) => {
     setActiveSlide(currentSlide);
