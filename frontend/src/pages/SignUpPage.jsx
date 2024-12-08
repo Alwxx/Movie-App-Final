@@ -17,12 +17,6 @@ const SignUpPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // if (password !== confirmPassword) {
-    //   setError("Passwords do not match.");
-    //   return;
-    // }
-
     try {
       const { data } = await api.post("/api/users/signup", {
         username,
@@ -30,7 +24,7 @@ const SignUpPage = () => {
         password,
       });
       const token = data.token;
-      localStorage.setItem("token", token);
+      localStorage.setItem("jwt", token);
       setToken(token);
       toast.success("Registration successful.");
       navigate("/");

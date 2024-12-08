@@ -3,11 +3,13 @@ import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import AuthContext from "../context/AuthContext";
+import Spinner from "../components/UI/Spinner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showPass, setShowPass] = useState(false);
   const { setToken, isLoading, user } = useContext(AuthContext);
@@ -16,7 +18,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setIsSubmitting(true);
     try {
       const { data } = await api.post("/api/users/login", {
         email,
@@ -28,6 +30,8 @@ export default function LoginPage() {
     } catch (error) {
       console.log(error);
       setError("Invalid email or password.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -110,7 +114,11 @@ export default function LoginPage() {
                 type="submit"
                 className="flex w-full justify-center rounded-md bg-red-600 px-3 py-1.5 text-sm font-semibold leading-6 text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600"
               >
-                Sign in
+                {isSubmitting ? (
+                  <Spinner width="w-5" height="h-5" border={`border-2`} />
+                ) : (
+                  "Sign in"
+                )}
               </button>
             </div>
           </form>

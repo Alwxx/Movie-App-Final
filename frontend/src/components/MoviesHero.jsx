@@ -1,28 +1,28 @@
-import { useEffect, useState } from "react";
-import { toast } from "react-toastify";
+import { useContext, useEffect, useState } from "react";
 import { discoverMovies } from "../services/movieApiService";
 import Spinner from "./UI/Spinner";
 import { Splide, SplideSlide } from "@splidejs/react-splide";
-import { Link } from "react-router-dom";
 import "@splidejs/react-splide/css";
 import clsx from "clsx";
+import MovieCard from "./UI/MovieCard";
+import AuthContext from "../context/AuthContext";
+import { useHandleError } from "../utils/functions";
 function MoviesHero() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [backgroundPoster, setBackgroundPoster] = useState("");
 
+  const { token } = useContext(AuthContext);
+  const handleError = useHandleError();
   useEffect(() => {
     const fetchMovies = async () => {
       setIsLoading(true);
       try {
-        const data = await discoverMovies();
+        const data = await discoverMovies(token, handleError);
         const finalMovies = data.filter((mov) => mov.poster_path);
         setMovies(finalMovies);
       } catch (error) {
-        toast.error(
-          "We're having troubles connecting to our database. We're working on it!"
-        );
+        handleError(error);
         console.error("Error fetching movies:", error);
       } finally {
         setIsLoading(false);
@@ -36,14 +36,20 @@ function MoviesHero() {
     setActiveSlide(currentSlide);
   };
   return (
-    <div className="min-h-[90vh] bg-gray-900 flex items-end pb-[35px] relative overflow-hidden ">
-      {movies.length && movies[activeSlide].backdrop_path && (
+    <div
+      className={`min-h-[90vh]  dark:bg-gray-900 bg-gray-200 flex  pb-[35px] relative overflow-hidden white dark:text-white ${
+        isLoading ? "items-center justify-center" : "items-end"
+      }`}
+    >
+      {movies.length && movies[activeSlide].backdrop_path ? (
         <div className="top-1/2 -translate-x-1/2 -translate-y-1/2 w-full absolute left-1/2 pointer-events-none imageBg">
           <img
             className="w-full"
             src={`https://image.tmdb.org/t/p/w1280${movies[activeSlide].backdrop_path}`}
           />
         </div>
+      ) : (
+        <></>
       )}
       {isLoading ? (
         <Spinner width="w-12" height="h-12" />
@@ -76,20 +82,17 @@ function MoviesHero() {
                     key={movie.id}
                     className={clsx("transition-all")}
                   >
-                    <Link to={`/movies/${movie.id}`} className="flex h-full">
-                      <img
-                        className="object-cover"
-                        src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
-                        alt={movie.title}
-                      />
-                    </Link>
+                    <MovieCard
+                      movie={movie}
+                      isWishlisted={movie.isWishlisted}
+                    />
                   </SplideSlide>
                 )
             )}
           </Splide>
         </div>
       ) : (
-        <p>No movies found</p>
+        <p className="dark:text-white">No movies found</p>
       )}
     </div>
   );

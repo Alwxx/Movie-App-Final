@@ -3,7 +3,6 @@ import axios from "axios";
 const api = axios.create({
   baseURL: import.meta.env.PROD ? import.meta.env.VITE_SERVER_API_URI : "",
   headers: {
-    Authorization: "Bearer YOUR_GITHUB_TOKEN",
     "Content-Type": "application/json",
   },
 });

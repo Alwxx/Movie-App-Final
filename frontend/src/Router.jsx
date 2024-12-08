@@ -2,11 +2,12 @@ import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import SignUpPage from "./pages/SignUpPage";
 import Navbar from "./components/navbar/Navbar";
-import MovieCard from "./components/moviecard/MovieCard";
+import MainMovie from "./components/moviecard/MainMovie";
 import HomePage from "./pages/HomePage";
 import Favorites from "./pages/Favorites";
 import SearchPage from "./pages/SearchPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ProfilePage from "./pages/ProfilePage";
 
 function AppRouter() {
   return (
@@ -24,10 +25,18 @@ function AppRouter() {
           }
         />
         <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/movies/:id"
           element={
             <ProtectedRoute>
-              <MovieCard />
+              <MainMovie />
             </ProtectedRoute>
           }
         />

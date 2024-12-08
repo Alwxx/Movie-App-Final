@@ -10,6 +10,7 @@ import Toggle from "../UI/Toggle";
 import clsx from "clsx";
 import AuthContext from "../../context/AuthContext";
 import Spinner from "../UI/Spinner";
+import Avatar from "../UI/Avatar";
 
 const navigation = [
   { name: "My Favorites", href: "/favorites" },
@@ -21,12 +22,6 @@ export default function Navbar() {
   const { theme, toggleTheme } = useContext(ThemeContext);
 
   const { user, isLoading, setToken, setUser } = useContext(AuthContext);
-
-  const handleLogout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("jwt");
-  };
 
   const location = useLocation();
   return (
@@ -40,7 +35,7 @@ export default function Navbar() {
     >
       <nav
         aria-label="Global"
-        className="mx-auto flex max-w-7xl items-center justify-between gap-x-6 p-6 lg:px-8"
+        className="mx-auto flex max-w-7xl items-center justify-between gap-x-6 p-6 lg:px-8 "
       >
         <div className="flex lg:flex-1">
           <Link to="/">
@@ -52,7 +47,7 @@ export default function Navbar() {
             />
           </Link>
         </div>
-        <div className="hidden lg:flex flex-1 lg:gap-x-12 justify-center items-center">
+        <div className="hidden lg:flex flex-2 lg:gap-x-12 justify-center items-center ">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -60,7 +55,7 @@ export default function Navbar() {
               className={clsx(
                 "text-sm font-semibold leading-6 transition   rounded px-4 py-2",
                 location.pathname == "/"
-                  ? "text-white "
+                  ? "text-white"
                   : location.pathname == item.href
                   ? "text-red-500 dark:text-red-500 font-bold"
                   : "text-gray-900 dark:text-white"
@@ -80,10 +75,10 @@ export default function Navbar() {
                   : "text-gray-900 dark:text-white"
               )}
             >
-              Hi {user.username}!
-              <div className="underline cursor-pointer" onClick={handleLogout}>
+              <Avatar size={25} />
+              {/* <div className="underline cursor-pointer" onClick={handleLogout}>
                 Logout
-              </div>
+              </div> */}
             </div>
           ) : (
             <Link

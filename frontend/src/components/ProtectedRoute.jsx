@@ -8,7 +8,11 @@ function ProtectedRoute({ children }) {
   const { user, isLoading } = useContext(AuthContext);
 
   if (isLoading) {
-    return <Spinner />;
+    return (
+      <div className="flex-1 flex items-center justify-center dark:bg-gray-800 bg-gray-200">
+        <Spinner />;
+      </div>
+    );
   }
 
   if (!user) {

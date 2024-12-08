@@ -1,0 +1,263 @@
+import { useParams } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
+import ThemeContext from "../../context/ThemeContext";
+import { useHandleError } from "../../utils/functions";
+import RatingStars from "../ratingstars/RatingStars";
+import { fetchMovieDetails } from "../../services/movieApiService";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { HeartIcon as SolidHeartIcon } from "@heroicons/react/24/solid";
+import { HeartIcon as OutlineHeartIcon } from "@heroicons/react/24/outline";
+import AuthContext from "../../context/AuthContext";
+import Spinner from "../UI/Spinner";
+import Avatar from "../UI/Avatar";
+
+const MainMovie = () => {
+  const { id } = useParams();
+  const [movie, setMovie] = useState(null);
+  const [comments, setComments] = useState([]);
+  const [rating, setRating] = useState(0);
+  const [originalRating, setOriginalRating] = useState(0); // Store the original rating
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRating, setIsRating] = useState(false);
+  const [isCommenting, setIsCommenting] = useState(false);
+  const [inWishlist, setInWishlist] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [animating, setAnimating] = useState(false);
+  const { token } = useContext(AuthContext);
+  const handleError = useHandleError();
+
+  useEffect(() => {
+    const fetchMovieInfo = async () => {
+      setIsLoading(true);
+      try {
+        const movieData = await fetchMovieDetails(id);
+        setMovie(movieData);
+
+        const { data } = await axios.get(`/api/movies/${id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const userRating = data.data.userRating || 0;
+
+        setComments(data.data.comments || []);
+        setRating(userRating);
+        setOriginalRating(userRating); // Store the original rating
+        setInWishlist(data.data.inWishlist || false);
+      } catch (error) {
+        handleError(error, "Failed to load movie details");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchMovieInfo();
+  }, [id]);
+
+  const updateWishlist = async () => {
+    if (!movie || !movie.id) return;
+    const previousState = inWishlist;
+
+    setInWishlist(!inWishlist);
+    setAnimating(true);
+    try {
+      const { data } = await axios.post(
+        "/api/movies/favorites",
+        { movieId: movie.id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!data.success && data.message) {
+        toast.error(data.message);
+        setInWishlist(previousState);
+      }
+    } catch (error) {
+      setInWishlist(previousState);
+      handleError(error, "Failed to update wishlist");
+    } finally {
+      setAnimating(false);
+    }
+  };
+
+  const submitRating = async () => {
+    const previousRating = originalRating; // Store the original rating before update
+    setIsRating(true);
+    try {
+      const { data } = await axios.post(
+        `/api/movies/${id}/rate`,
+        { rating, movieId: movie.id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setOriginalRating(rating); // Update the original rating to reflect the new server value
+      toast.success(data.message || "Rating submitted successfully!");
+    } catch (error) {
+      setRating(previousRating); // Revert to the original rating if an error occurs
+      handleError(error, "Failed to submit rating");
+    } finally {
+      setIsRating(false);
+    }
+  };
+
+  const postComment = async () => {
+    if (!newComment.trim()) return;
+    setIsCommenting(true);
+    try {
+      const { data } = await axios.post(
+        `/api/movies/${id}/comments`,
+        { content: newComment, movieId: movie.id },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      setComments((prev) => [...prev, data.data]);
+      setNewComment("");
+      toast.success("Comment posted successfully!");
+    } catch (error) {
+      handleError(error, "Failed to post comment");
+    } finally {
+      setIsCommenting(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  return (
+    <div className={`min-h-screen py-8 px-4 dark:bg-gray-800 bg-gray-200`}>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-screen">
+          <Spinner />
+        </div>
+      ) : movie ? (
+        <div className="flex flex-col dark:bg-gray-900 bg-white md:flex-row items-start max-w-4xl mx-auto rounded-lg shadow-lg p-6 gap-8">
+          <div className="relative w-full md:w-1/3">
+            <img
+              src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+              alt={`${movie.title} Poster`}
+              className="rounded-lg shadow-lg"
+            />
+            <div
+              className="absolute top-2 right-2 cursor-pointer rounded-full p-2"
+              onClick={updateWishlist}
+            >
+              {inWishlist ? (
+                <SolidHeartIcon
+                  className={`w-6 h-6 text-red-500 ${
+                    animating && "animate-bounce"
+                  }`}
+                />
+              ) : (
+                <OutlineHeartIcon
+                  className={`w-6 h-6 text-red-500 ${
+                    animating && "animate-bounce"
+                  }`}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Movie Details */}
+          <div className="w-full md:w-2/3 flex flex-col gap-2 dark:text-white ">
+            <h2 className="text-3xl font-bold">{movie.title}</h2>
+            <p>{movie.overview}</p>
+            <p>
+              <strong>Release Date:</strong> {movie.release_date}
+            </p>
+            <p>
+              <strong>Genre:</strong>{" "}
+              {movie.genres.map((g) => g.name).join(", ")}
+            </p>
+
+            <p>
+              <strong>TMDB Rating:</strong> {movie.vote_average || "N/A"}
+            </p>
+
+            <div className="rating-section mt-4">
+              <strong>Your Rating:</strong>
+              <RatingStars rating={rating} setRating={setRating} editable />
+              {rating !== originalRating && (
+                <button
+                  onClick={submitRating}
+                  className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition min-w-20"
+                >
+                  {isRating ? (
+                    <Spinner width="w-5" height="h-5" border={`border-2`} />
+                  ) : (
+                    "Submit Rating"
+                  )}
+                </button>
+              )}
+            </div>
+
+            <div className="comments-section mt-6">
+              <h3 className="text-2xl font-bold mb-4">Comments</h3>
+              {comments.map((comment) => (
+                <div
+                  key={comment._id}
+                  className="flex items-start gap-4 p-4 mb-4 bg-gray-100 dark:bg-gray-700 rounded-lg"
+                >
+                  <Avatar
+                    showDropdown={false}
+                    customUser={{ username: comment.user.username }}
+                    size={40}
+                  />
+
+                  <div className="flex flex-col">
+                    <span className="font-bold text-gray-900 dark:text-white">
+                      {comment.user.username}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatDate(comment.createdAt)}
+                    </span>
+                    <p className="mt-2 text-sm text-gray-800 dark:text-gray-300">
+                      {comment.content}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              <textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Write your comment here..."
+                className="w-full p-2 mb-4 rounded-lg dark:bg-gray-700 bg-gray-200 dark:text-white"
+              />
+              <button
+                onClick={postComment}
+                className="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition min-w-20"
+              >
+                {isCommenting ? (
+                  <Spinner width="w-5" height="h-5" border={`border-2`} />
+                ) : (
+                  "Submit Comment"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <p className="text-center">Movie not found.</p>
+      )}
+    </div>
+  );
+};
+
+export default MainMovie;
