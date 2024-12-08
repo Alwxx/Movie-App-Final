@@ -10,6 +10,12 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
+    historyApiFallback: true,
   },
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      input: "/index.html",
+    },
+  },
 });
