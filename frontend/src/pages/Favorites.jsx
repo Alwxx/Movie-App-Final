@@ -6,6 +6,7 @@ import { Link } from "react-router-dom";
 import MovieCard from "../components/UI/MovieCard";
 import { ShareIcon } from "@heroicons/react/24/outline";
 import AuthContext from "../context/AuthContext";
+import api from "../services/api";
 
 const API_KEY = "c56e629d2ce4c5a38303801125569999";
 const BASE_URL = "https://api.themoviedb.org/3";
@@ -37,7 +38,7 @@ const Favorites = () => {
     const fetchFavorites = async () => {
       setIsLoading(true);
       try {
-        const { data } = await axios.get("/api/movies/favorites", {
+        const { data } = await api.get("/api/movies/favorites", {
           headers: {
             Authorization: `Bearer ${token}`,
           },
