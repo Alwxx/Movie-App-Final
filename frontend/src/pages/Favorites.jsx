@@ -64,7 +64,7 @@ const Favorites = () => {
   const handleShare = async () => {
     setIsSharing(true);
     try {
-      await axios.post(
+      await api.post(
         "/api/movies/share",
         { email: recipientEmail, movies },
         {

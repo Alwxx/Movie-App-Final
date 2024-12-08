@@ -11,6 +11,7 @@ import { HeartIcon as OutlineHeartIcon } from "@heroicons/react/24/outline";
 import AuthContext from "../../context/AuthContext";
 import Spinner from "../UI/Spinner";
 import Avatar from "../UI/Avatar";
+import api from "../../services/api";
 
 const MainMovie = () => {
   const { id } = useParams();
@@ -34,7 +35,7 @@ const MainMovie = () => {
         const movieData = await fetchMovieDetails(id);
         setMovie(movieData);
 
-        const { data } = await axios.get(`/api/movies/${id}`, {
+        const { data } = await api.get(`/api/movies/${id}`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -62,7 +63,7 @@ const MainMovie = () => {
     setInWishlist(!inWishlist);
     setAnimating(true);
     try {
-      const { data } = await axios.post(
+      const { data } = await api.post(
         "/api/movies/favorites",
         { movieId: movie.id },
         {
@@ -88,7 +89,7 @@ const MainMovie = () => {
     const previousRating = originalRating; // Store the original rating before update
     setIsRating(true);
     try {
-      const { data } = await axios.post(
+      const { data } = await api.post(
         `/api/movies/${id}/rate`,
         { rating, movieId: movie.id },
         {
@@ -111,7 +112,7 @@ const MainMovie = () => {
     if (!newComment.trim()) return;
     setIsCommenting(true);
     try {
-      const { data } = await axios.post(
+      const { data } = await api.post(
         `/api/movies/${id}/comments`,
         { content: newComment, movieId: movie.id },
         {
