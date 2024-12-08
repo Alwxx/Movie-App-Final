@@ -12,7 +12,7 @@ function MoviesHero() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const { token } = useContext(AuthContext);
+  const { token, isLoading: authLoading } = useContext(AuthContext);
   const handleError = useHandleError();
   useEffect(() => {
     const fetchMovies = async () => {
@@ -29,8 +29,8 @@ function MoviesHero() {
       }
     };
 
-    fetchMovies();
-  }, []);
+    if (token) fetchMovies();
+  }, [token]);
 
   const handleMove = (splide, currentSlide) => {
     setActiveSlide(currentSlide);
