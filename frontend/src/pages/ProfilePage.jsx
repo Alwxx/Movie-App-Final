@@ -10,6 +10,7 @@ export default function ProfilePage() {
   const [username, setUsername] = useState(user?.username || "");
   const [email, setEmail] = useState(user?.email || "");
   const [password, setPassword] = useState("");
+  const [oldPassword, setOldPassword] = useState("");
   const [editingField, setEditingField] = useState(""); // Tracks which field is being edited
   const [isSaving, setIsSaving] = useState(false);
   const [isChanged, setIsChanged] = useState(false); // Tracks if any field has changed
@@ -19,7 +20,11 @@ export default function ProfilePage() {
     setIsSaving(true);
     try {
       const payload = { username, email };
-      if (password) payload.password = password;
+
+      if (password) {
+        payload.password = password;
+        payload.oldPassword = oldPassword;
+      }
       const { data } = await api.put("/api/users/profile", payload, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -52,6 +57,9 @@ export default function ProfilePage() {
         break;
       case "password":
         setPassword(value);
+        break;
+      case "oldPassword":
+        setOldPassword(value);
         break;
       default:
         break;
@@ -137,10 +145,52 @@ export default function ProfilePage() {
             )}
           </div>
 
-          {/* Password */}
+          {/* Old Password */}
           <div>
             <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">
-              Password
+              Old Password
+            </label>
+            {editingField === "password" ? (
+              <div className="flex gap-4">
+                <input
+                  type="password"
+                  value={oldPassword}
+                  onChange={(e) =>
+                    handleFieldChange("oldPassword", e.target.value)
+                  }
+                  className="flex-1 px-3 py-2 mt-1 text-gray-900 bg-gray-100 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
+                  placeholder="Enter old password"
+                />
+                <button
+                  onClick={() => {
+                    setPassword("");
+                    setOldPassword("");
+                    setEditingField("");
+                  }}
+                  className="text-sm text-red-500"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-900 dark:text-gray-300">
+                  ********
+                </span>
+                <button
+                  onClick={() => setEditingField("password")}
+                  className="text-sm text-indigo-600 hover:text-indigo-500"
+                >
+                  Change
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* New Password */}
+          <div>
+            <label className="block text-sm font-medium text-gray-900 dark:text-gray-300">
+              New Password
             </label>
             {editingField === "password" ? (
               <div className="flex gap-4">
@@ -151,10 +201,12 @@ export default function ProfilePage() {
                     handleFieldChange("password", e.target.value)
                   }
                   className="flex-1 px-3 py-2 mt-1 text-gray-900 bg-gray-100 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-800 dark:text-white"
+                  placeholder="Enter new password"
                 />
                 <button
                   onClick={() => {
                     setPassword("");
+                    setOldPassword("");
                     setEditingField("");
                   }}
                   className="text-sm text-red-500"
