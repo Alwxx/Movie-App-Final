@@ -1,73 +1,52 @@
-const Movie = require("../models/Movies");
-const uploadImage = require("../utils/imageUpload");
 const Favorite = require("../models/Favorite");
 const Email = require("../utils/Email");
 const Rating = require("../models/Rating");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
+const Movie = require("../models/Movie");
 
 const getMovies = async (req, res) => {
   try {
-    const movies = await Movie.find();
-    res.json(movies);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
+    const movies = await Movie.find().select(
+      "title overview release_date genres poster_path vote_average"
+    );
 
-const createMovie = async (req, res) => {
-  try {
-    const movie = new Movie(req.body);
-    const savedMovie = await movie.save();
-    res.status(201).json(savedMovie);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-const updateMovie = async (req, res) => {
-  try {
-    const movie = await Movie.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
+    res.json({
+      success: true,
+      message: "Movies retrieved successfully",
+      data: movies,
     });
-    if (!movie) return res.status(404).json({ message: "Movie not found" });
-    res.json(movie);
   } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
-};
-
-const deleteMovie = async (req, res) => {
-  try {
-    const movie = await Movie.findByIdAndDelete(req.params.id);
-    if (!movie) return res.status(404).json({ message: "Movie not found" });
-    res.json({ message: "Movie deleted" });
-  } catch (error) {
-    res.status(400).json({ message: error.message });
+    console.error("Error fetching movies:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch movies.",
+    });
   }
 };
 
 const updateFavorite = async (req, res) => {
   try {
-    const { movieId } = req.body;
+    const { movieId, tmdbMovieId } = req.body;
 
-    if (!movieId) {
+    if (!movieId && !tmdbMovieId) {
       return res.status(400).json({
         success: false,
-        message: "Movie ID is required",
+        message: "Either Movie ID or TMDB Movie ID is required",
         data: {},
       });
     }
 
     // Check if already favorited
+
     const existingFavorite = await Favorite.findOne({
       user: req.user.id,
-      movieId,
+      ...(tmdbMovieId && { tmdbMovieId }),
+      ...(movieId && { movie: movieId }),
     });
 
     if (existingFavorite) {
-      //Remove from favorites
-
+      // Remove from favorites
       await existingFavorite.deleteOne();
       return res.status(201).json({
         success: true,
@@ -78,7 +57,8 @@ const updateFavorite = async (req, res) => {
       // Create new favorite
       const favorite = new Favorite({
         user: req.user.id,
-        movieId,
+        movie: movieId || null,
+        tmdbMovieId: tmdbMovieId || null,
       });
 
       await favorite.save();
@@ -101,12 +81,38 @@ const updateFavorite = async (req, res) => {
 
 const getFavorites = async (req, res) => {
   try {
-    const favorites = await Favorite.find({ user: req.user.id });
+    const favorites = await Favorite.find({ user: req.user.id })
+      .populate("movie", "title description releaseDate") // Populate local movie details
+      .exec();
+
+    const response = favorites.map((favorite) => {
+      if (favorite.movie) {
+        // Local movie favorite
+        return {
+          id: favorite.movie._id,
+          title: favorite.movie.title,
+          description: favorite.movie.description,
+          releaseDate: favorite.movie.releaseDate,
+          type: "local", // Distinguish between local and TMDB favorites
+        };
+      } else if (favorite.tmdbMovieId) {
+        // TMDB movie favorite
+        return {
+          id: favorite.tmdbMovieId,
+          title: null, // TMDB title must be fetched on the frontend using TMDB API
+          description: null,
+          releaseDate: null,
+          type: "tmdb", // Distinguish between local and TMDB favorites
+        };
+      } else {
+        return {};
+      }
+    });
 
     res.status(200).json({
       success: true,
       message: "Favorites retrieved successfully",
-      data: favorites,
+      data: response,
     });
   } catch (error) {
     console.error("Get favorites error:", error);
@@ -144,11 +150,30 @@ const shareWishlist = async (req, res) => {
 
 const getMovieDetails = async (req, res) => {
   try {
-    const { id: movieId } = req.params;
+    const { id: movieId } = req.  params; // `local` indicates if this is a local movie
+    const { local } = req.query;
     const userId = req.user?.id;
 
+    let movieDetails = null;
+
+    // If it's a local movie, fetch details from the database
+    if (local === "true") {
+      movieDetails = await Movie.findById(movieId).select(
+        "title description releaseDate genres averageRating"
+      );
+
+      if (!movieDetails) {
+        return res.status(404).json({
+          success: false,
+          message: "Local movie not found.",
+        });
+      }
+    }
+
     // Fetch all comments for the movie
-    const comments = await Comment.find({ movieId })
+    const comments = await Comment.find(
+      local === "true" ? { movie: movieId } : { tmdbMovieId: movieId }
+    )
       .populate("user", "username")
       .populate({
         path: "parentComment",
@@ -158,17 +183,26 @@ const getMovieDetails = async (req, res) => {
 
     // Fetch the user's rating
     const userRating = userId
-      ? await Rating.findOne({ movieId, user: userId }).select("rating")
+      ? await Rating.findOne(
+          local === "true"
+            ? { movie: movieId, user: userId }
+            : { tmdbMovieId: movieId, user: userId }
+        ).select("rating")
       : null;
 
     // Check if the movie is in the user's wishlist
     const inWishlist = userId
-      ? !!(await Favorite.findOne({ movieId, user: userId }))
+      ? !!(await Favorite.findOne(
+          local === "true"
+            ? { movie: movieId, user: userId }
+            : { tmdbMovieId: movieId, user: userId }
+        ))
       : false;
 
     res.json({
       success: true,
       data: {
+        movieDetails, // Only included if it's a local movie
         comments,
         userRating: userRating?.rating || 0,
         inWishlist,
@@ -182,27 +216,29 @@ const getMovieDetails = async (req, res) => {
     });
   }
 };
+
 const addComment = async (req, res) => {
   try {
-    const { movieId, content, parentComment } = req.body;
+    const { content, movieId, tmdbMovieId, parentComment } = req.body;
     const userId = req.user.id;
 
-    if (!content || !movieId) {
+    if (!content || (!movieId && !tmdbMovieId)) {
       return res.status(400).json({
         success: false,
-        message: "Content and movie ID are required.",
+        message: "Content and either Movie ID or TMDB Movie ID are required.",
       });
     }
 
     // Create new comment
     const newComment = await Comment.create({
       content,
-      movieId,
       user: userId,
-      parentComment,
+      movie: movieId || null,
+      tmdbMovieId: tmdbMovieId || null,
+      parentComment: parentComment || null,
     });
 
-    // Populate the user field to get the username instead of just the user ID
+    // Populate the user field to include the username
     const populatedComment = await newComment.populate("user", "username");
 
     // If it's a reply, notify the original commenter
@@ -215,7 +251,7 @@ const addComment = async (req, res) => {
       if (parent?.user?.email) {
         await Email.sendReplyNotification({
           email: parent.user.email,
-          movieId,
+          movieId: movieId || tmdbMovieId, // Pass the appropriate movie ID
           movieTitle: req.body.movieTitle, // Pass the movie title from the client
         });
       }
@@ -224,7 +260,7 @@ const addComment = async (req, res) => {
     res.json({
       success: true,
       message: "Comment added successfully.",
-      data: populatedComment, // Send the populated comment with user details
+      data: populatedComment,
     });
   } catch (error) {
     console.error("Error adding comment:", error);
@@ -234,16 +270,16 @@ const addComment = async (req, res) => {
     });
   }
 };
-
 const rateMovie = async (req, res) => {
   try {
-    const { movieId, rating } = req.body;
+    const { movieId, tmdbMovieId, rating } = req.body;
     const userId = req.user.id;
 
-    if (!movieId || rating === undefined) {
+    // Validate input
+    if ((!movieId && !tmdbMovieId) || rating === undefined) {
       return res.status(400).json({
         success: false,
-        message: "Movie ID and rating are required.",
+        message: "Either Movie ID or TMDB Movie ID, and rating are required.",
       });
     }
 
@@ -256,9 +292,16 @@ const rateMovie = async (req, res) => {
 
     // Update or create a rating
     const userRating = await Rating.findOneAndUpdate(
-      { movieId, user: userId },
-      { rating },
-      { new: true, upsert: true }
+      {
+        user: userId,
+        $or: [{ movie: movieId }, { tmdbMovieId }],
+      },
+      {
+        rating,
+        movie: movieId || null,
+        tmdbMovieId: tmdbMovieId || null,
+      },
+      { new: true, upsert: true } // Create if not found, update if found
     );
 
     res.json({
@@ -277,9 +320,6 @@ const rateMovie = async (req, res) => {
 
 module.exports = {
   getMovies,
-  createMovie,
-  updateMovie,
-  deleteMovie,
   updateFavorite,
   getFavorites,
   shareWishlist,

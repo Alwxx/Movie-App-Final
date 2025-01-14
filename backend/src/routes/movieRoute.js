@@ -1,9 +1,6 @@
 const express = require("express");
 const {
   getMovies,
-  createMovie,
-  updateMovie,
-  deleteMovie,
   updateFavorite,
   getFavorites,
   shareWishlist,
@@ -17,11 +14,6 @@ const upload = require("../middlewares/multer");
 
 // Movies routes
 movieRouter.get("/", getMovies);
-
-movieRouter.post("/", userAuth, admin, createMovie);
-movieRouter.put("/update/:id", userAuth, admin, updateMovie);
-movieRouter.delete("/delete/:id", userAuth, admin, deleteMovie);
-movieRouter.post("/movies", upload.single("poster"), createMovie);
 
 // Favorites routes
 movieRouter.post("/favorites", userAuth, updateFavorite); // Add to favorites

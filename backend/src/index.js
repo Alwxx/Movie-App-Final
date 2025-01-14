@@ -1,10 +1,9 @@
 const express = require("express");
 const { connectDB } = require("../config/db");
-const { reviewRouter } = require("./routes/reviewRoute");
-const { movieRouter } = require("./routes/movieRoute");
-const { genreRouter } = require("./routes/genreRoute");
 const { userRouter } = require("./routes/userRoute");
 const cors = require("cors");
+const { adminRouter } = require("./routes/adminRoute");
+const { movieRouter } = require("./routes/movieRoute");
 
 require("dotenv").config();
 
@@ -22,9 +21,8 @@ app.use(
   })
 );
 app.use("/api/users", userRouter);
-app.use("/api/reviews", reviewRouter);
+app.use("/api/admin", adminRouter);
 app.use("/api/movies", movieRouter);
-app.use("/api/genre", genreRouter);
 
 app.get("/", (req, res) => {
   res.send("Welcome to movie review and rating app - By Alwin Sunny");
