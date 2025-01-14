@@ -47,6 +47,46 @@ export const discoverMovies = async (token) => {
   }
 };
 
+export const fetchLocalMoviesWithWishlist = async (token, handleError) => {
+  try {
+    // Fetch local movies
+    const { data: localMoviesResponse } = await api.get("/api/movies");
+    const localMovies = localMoviesResponse.data.map((movie) => ({
+      ...movie,
+      poster_path: movie.poster_path || "https://picsum.photos/500", // Fallback poster path if missing
+    }));
+
+    if (token) {
+      // Fetch user's favorites
+      const { data: userFavoritesResponse } = await api.get(
+        "/api/movies/favorites",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      const userFavorites = userFavoritesResponse.data;
+      // Merge local movies with wishlist status
+      const final = localMovies.map((movie) => ({
+        ...movie,
+        isWishlisted: userFavorites.some((fav) => fav.id === movie._id),
+      }));
+      return final;
+    }
+
+    // If no token, return movies without wishlist status
+    return localMovies.map((movie) => ({
+      ...movie,
+      isWishlisted: false,
+    }));
+  } catch (error) {
+    handleError(error, "Failed to fetch local movies with wishlist");
+    console.error("Error fetching local movies with wishlist:", error);
+    throw error;
+  }
+};
+
 export const searchMovies = async (query) => {
   try {
     const response = await axios.get(`${BASE_URL}/search/movie`, {

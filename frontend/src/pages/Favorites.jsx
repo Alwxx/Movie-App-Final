@@ -11,22 +11,21 @@ import api from "../services/api";
 const API_KEY = "c56e629d2ce4c5a38303801125569999";
 const BASE_URL = "https://api.themoviedb.org/3";
 
-const fetchMovieDetails = async (movieId) => {
+const fetchTmdbMovieDetails = async (tmdbId) => {
   try {
-    const response = await axios.get(`${BASE_URL}/movie/${movieId}`, {
+    const response = await axios.get(`${BASE_URL}/movie/${tmdbId}`, {
       params: {
         api_key: API_KEY,
       },
     });
     return response.data;
   } catch (error) {
-    console.error(`Error fetching movie details for ID ${movieId}:`, error);
-    throw error;
+    console.error(`Error fetching TMDB movie details for ID ${tmdbId}:`, error);
+    return null;
   }
 };
 
 const Favorites = () => {
-  const [favorites, setFavorites] = useState([]);
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -34,6 +33,7 @@ const Favorites = () => {
   const [isSharing, setIsSharing] = useState(false);
 
   const { token } = useContext(AuthContext);
+
   useEffect(() => {
     const fetchFavorites = async () => {
       setIsLoading(true);
@@ -44,12 +44,36 @@ const Favorites = () => {
           },
         });
 
-        const moviePromises = data.data.map((favorite) =>
-          fetchMovieDetails(favorite.movieId)
+        // Enrich TMDB movies with additional data
+        const enrichedMovies = await Promise.all(
+          data.data.map(async (favorite) => {
+            if (favorite.type === "tmdb") {
+              const tmdbDetails = await fetchTmdbMovieDetails(favorite.id);
+              return {
+                id: favorite.id,
+                title: tmdbDetails?.title || "Unknown Title",
+                description:
+                  tmdbDetails?.overview || "No description available.",
+                releaseDate:
+                  tmdbDetails?.release_date || "Unknown release date",
+                poster_path: tmdbDetails?.poster_path || null,
+                type: "tmdb",
+              };
+            } else {
+              // Local movie details are already available
+              return {
+                id: favorite.id,
+                title: favorite.title,
+                description: favorite.description,
+                releaseDate: favorite.releaseDate,
+                poster_path: favorite.poster_path, // Assume no poster for local movies unless backend provides
+                type: "local",
+              };
+            }
+          })
         );
 
-        const movieDetails = await Promise.all(moviePromises);
-        setMovies(movieDetails);
+        setMovies(enrichedMovies);
       } catch (error) {
         toast.error("Failed to load favorites. Please try again.");
         console.error("Error fetching favorites:", error);
@@ -59,7 +83,7 @@ const Favorites = () => {
     };
 
     fetchFavorites();
-  }, []);
+  }, [token]);
 
   const handleShare = async () => {
     setIsSharing(true);
@@ -115,6 +139,11 @@ const Favorites = () => {
                   movie={movie}
                   isWishlisted={true}
                   showLoader={true}
+                  posterUrl={
+                    movie.type === "tmdb" && movie.poster_path
+                      ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+                      : null
+                  }
                 />
               ))}
             </div>

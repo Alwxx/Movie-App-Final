@@ -8,6 +8,9 @@ import Favorites from "./pages/Favorites";
 import SearchPage from "./pages/SearchPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ProfilePage from "./pages/ProfilePage";
+import LocalMoviesHero from "./components/LocalMoviesHero";
+import AdminDashboard from "./pages/AdminDashboard";
+import ProtectedRouteAdmin from "./components/ProtectedRouteAdmin";
 
 function AppRouter() {
   return (
@@ -15,6 +18,8 @@ function AppRouter() {
       <Navbar />
       <Routes>
         <Route path="/" element={<HomePage />} />
+
+        <Route path="/local" element={<LocalMoviesHero />} />
         <Route path="/search" element={<SearchPage />} />
         <Route
           path="/favorites"
@@ -38,6 +43,14 @@ function AppRouter() {
             <ProtectedRoute>
               <MainMovie />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRouteAdmin>
+              <AdminDashboard />
+            </ProtectedRouteAdmin>
           }
         />
         <Route path="/login" element={<LoginPage />} />

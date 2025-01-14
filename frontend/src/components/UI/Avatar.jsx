@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import AuthContext from "../../context/AuthContext";
 import Dropdown from "./Dropdown";
 
@@ -48,6 +48,11 @@ const Avatar = ({ customUser = null, showDropdown = true, size = 40 }) => {
 
   const links = [
     {
+      url: "/dashboard",
+      label: "Dashboard",
+      isAdmin: true,
+    },
+    {
       url: "/profile",
       label: "Account Settings",
     },
@@ -57,7 +62,6 @@ const Avatar = ({ customUser = null, showDropdown = true, size = 40 }) => {
       callback: handleLogout,
     },
   ];
-
   return (
     <div className="flex gap-2 items-center">
       <div
@@ -78,7 +82,13 @@ const Avatar = ({ customUser = null, showDropdown = true, size = 40 }) => {
       >
         {initials}
       </div>
-      {showDropdown && <Dropdown label={username} links={links} />}
+      {showDropdown && (
+        <Dropdown
+          isAdmin={user && user.role == "admin"}
+          label={username}
+          links={links}
+        />
+      )}
     </div>
   );
 };

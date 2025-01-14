@@ -10,7 +10,12 @@ import api from "../../services/api";
 import { Link, useNavigate } from "react-router-dom";
 import Spinner from "./Spinner";
 
-const MovieCard = ({ movie, isWishlisted, showLoader = false }) => {
+const MovieCard = ({
+  movie,
+  isWishlisted,
+  showLoader = false,
+  isLocal = false,
+}) => {
   const [inWishlist, setInWishlist] = useState(isWishlisted);
   const [animating, setAnimating] = useState(false);
   const { token } = useContext(AuthContext);
@@ -18,7 +23,7 @@ const MovieCard = ({ movie, isWishlisted, showLoader = false }) => {
   const navigate = useNavigate();
 
   const updateWishlist = async () => {
-    if (!movie || !movie.id) return;
+    if (!movie || (!movie.id && !movie._id)) return;
     if (!token) {
       //User is not logged in
       toast.info("Please login first");
@@ -26,19 +31,18 @@ const MovieCard = ({ movie, isWishlisted, showLoader = false }) => {
       return;
     }
     const previousState = inWishlist;
-
     setInWishlist(!inWishlist);
     setAnimating(true);
     try {
-      const { data } = await api.post(
-        "/api/movies/favorites",
-        { movieId: movie.id },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const payload = isLocal
+        ? { movieId: movie._id }
+        : { tmdbMovieId: movie.id };
+
+      const { data } = await api.post("/api/movies/favorites", payload, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       //Don't always show, only in case of error
       //   if (data.message) {
@@ -49,7 +53,7 @@ const MovieCard = ({ movie, isWishlisted, showLoader = false }) => {
       }
 
       if (data.data && data.success) {
-        if (data.data.movieId) {
+        if (data.data.tmdbMovieId || data.data.movie) {
           //Added:
           setInWishlist(true);
         } else {
@@ -83,7 +87,7 @@ const MovieCard = ({ movie, isWishlisted, showLoader = false }) => {
         )}
       </div>
       <Link
-        to={`/movies/${movie.id}`}
+        to={`/movies/${isLocal ? movie._id + "?local=true" : movie.id}`}
         className="flex h-full relative overflow-hidden rounded-md shadow-md"
       >
         {showLoader && animating && (
@@ -95,7 +99,11 @@ const MovieCard = ({ movie, isWishlisted, showLoader = false }) => {
         <div className="relative">
           <img
             className="w-full h-full object-cover "
-            src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+            src={
+              isLocal
+                ? movie.poster_path
+                : `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+            }
             alt={movie.title}
           />
 

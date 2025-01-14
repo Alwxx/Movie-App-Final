@@ -14,6 +14,7 @@ import Avatar from "../UI/Avatar";
 
 const navigation = [
   { name: "My Favorites", href: "/favorites" },
+  { name: "Local Movies", href: "/local" },
   { name: "Search", href: "/search" },
 ];
 

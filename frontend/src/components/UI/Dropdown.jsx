@@ -2,7 +2,7 @@ import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { Link } from "react-router-dom";
 
-export default function Dropdown({ label, links }) {
+export default function Dropdown({ label, links, isAdmin = false }) {
   return (
     <Menu as="div" className="relative inline-block text-left">
       <div>
@@ -21,17 +21,20 @@ export default function Dropdown({ label, links }) {
       >
         <div className="py-1">
           {links &&
-            links.map((link, index) => (
-              <MenuItem key={index}>
-                <Link
-                  to={link.url}
-                  className="block px-4 py-2 text-sm text-gray-700 dark:text-white data-[focus]:bg-gray-100 dark:data-[focus]:bg-gray-600 data-[focus]:text-gray-900 data-[focus]:outline-none"
-                  onClick={link.callback ?? null}
-                >
-                  {link.label}
-                </Link>
-              </MenuItem>
-            ))}
+            links.map(
+              (link, index) =>
+                (!link.isAdmin || (link.isAdmin && isAdmin)) && (
+                  <MenuItem key={index}>
+                    <Link
+                      to={link.url}
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-white data-[focus]:bg-gray-100 dark:data-[focus]:bg-gray-600 data-[focus]:text-gray-900 data-[focus]:outline-none"
+                      onClick={link.callback ?? null}
+                    >
+                      {link.label}
+                    </Link>
+                  </MenuItem>
+                )
+            )}
         </div>
       </MenuItems>
     </Menu>

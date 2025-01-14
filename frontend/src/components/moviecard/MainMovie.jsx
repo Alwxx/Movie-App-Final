@@ -1,9 +1,9 @@
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import { useContext, useEffect, useState } from "react";
 import ThemeContext from "../../context/ThemeContext";
 import { useHandleError } from "../../utils/functions";
 import RatingStars from "../ratingstars/RatingStars";
-import { fetchMovieDetails } from "../../services/movieApiService";
+import { fetchMovieDetails as fetchTMDBDetails } from "../../services/movieApiService";
 import { toast } from "react-toastify";
 import axios from "axios";
 import { HeartIcon as SolidHeartIcon } from "@heroicons/react/24/solid";
@@ -15,10 +15,12 @@ import api from "../../services/api";
 
 const MainMovie = () => {
   const { id } = useParams();
+  const location = useLocation();
+  const isLocal = new URLSearchParams(location.search).get("local") === "true";
   const [movie, setMovie] = useState(null);
   const [comments, setComments] = useState([]);
   const [rating, setRating] = useState(0);
-  const [originalRating, setOriginalRating] = useState(0); // Store the original rating
+  const [originalRating, setOriginalRating] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isRating, setIsRating] = useState(false);
   const [isCommenting, setIsCommenting] = useState(false);
@@ -32,20 +34,25 @@ const MainMovie = () => {
     const fetchMovieInfo = async () => {
       setIsLoading(true);
       try {
-        const movieData = await fetchMovieDetails(id);
-        setMovie(movieData);
-
-        const { data } = await api.get(`/api/movies/${id}`, {
+        let movieData;
+        let endpoint = `/api/movies/${id}${isLocal ? "?local=true" : ""}`;
+        const { data } = await api.get(endpoint, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
+        if (isLocal) {
+          movieData = data.data.movieDetails;
+        } else {
+          movieData = await fetchTMDBDetails(id);
+        }
+        setMovie(movieData);
         const userRating = data.data.userRating || 0;
 
         setComments(data.data.comments || []);
         setRating(userRating);
-        setOriginalRating(userRating); // Store the original rating
+        setOriginalRating(userRating);
         setInWishlist(data.data.inWishlist || false);
       } catch (error) {
         handleError(error, "Failed to load movie details");
@@ -54,7 +61,7 @@ const MainMovie = () => {
       }
     };
     fetchMovieInfo();
-  }, [id]);
+  }, [id, isLocal]);
 
   const updateWishlist = async () => {
     if (!movie || !movie.id) return;
@@ -65,7 +72,7 @@ const MainMovie = () => {
     try {
       const { data } = await api.post(
         "/api/movies/favorites",
-        { movieId: movie.id },
+        isLocal ? { movieId: movie.id } : { tmdbMovieId: movie.id },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -86,22 +93,24 @@ const MainMovie = () => {
   };
 
   const submitRating = async () => {
-    const previousRating = originalRating; // Store the original rating before update
+    const previousRating = originalRating;
     setIsRating(true);
     try {
       const { data } = await api.post(
         `/api/movies/${id}/rate`,
-        { rating, movieId: movie.id },
+        isLocal
+          ? { rating, movieId: movie._id }
+          : { rating, tmdbMovieId: movie.id },
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
-      setOriginalRating(rating); // Update the original rating to reflect the new server value
+      setOriginalRating(rating);
       toast.success(data.message || "Rating submitted successfully!");
     } catch (error) {
-      setRating(previousRating); // Revert to the original rating if an error occurs
+      setRating(previousRating);
       handleError(error, "Failed to submit rating");
     } finally {
       setIsRating(false);
@@ -114,7 +123,9 @@ const MainMovie = () => {
     try {
       const { data } = await api.post(
         `/api/movies/${id}/comments`,
-        { content: newComment, movieId: movie.id },
+        isLocal
+          ? { content: newComment, movieId: movie._id }
+          : { content: newComment, tmdbMovieId: movie.id },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -152,7 +163,13 @@ const MainMovie = () => {
         <div className="flex flex-col dark:bg-gray-900 bg-white md:flex-row items-start max-w-4xl mx-auto rounded-lg shadow-lg p-6 gap-8">
           <div className="relative w-full md:w-1/3">
             <img
-              src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
+              src={
+                isLocal
+                  ? movie.poster_path
+                    ? movie.poster_path
+                    : "https://picsum.photos/500"
+                  : `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+              }
               alt={`${movie.title} Poster`}
               className="rounded-lg shadow-lg"
             />
@@ -179,19 +196,23 @@ const MainMovie = () => {
           {/* Movie Details */}
           <div className="w-full md:w-2/3 flex flex-col gap-2 dark:text-white ">
             <h2 className="text-3xl font-bold">{movie.title}</h2>
-            <p>{movie.overview}</p>
+            <p>{movie.overview || movie.description}</p>
             <p>
-              <strong>Release Date:</strong> {movie.release_date}
+              <strong>Release Date:</strong>{" "}
+              {movie.release_date || movie.releaseDate}
             </p>
-            <p>
-              <strong>Genre:</strong>{" "}
-              {movie.genres.map((g) => g.name).join(", ")}
-            </p>
-
-            <p>
-              <strong>TMDB Rating:</strong> {movie.vote_average || "N/A"}
-            </p>
-
+            {movie.genres && (
+              <p>
+                <strong>Genre:</strong>{" "}
+                {movie.genres.map((g) => g.name).join(", ")}
+              </p>
+            )}
+            {movie.vote_average && (
+              <p>
+                <strong>TMDB Rating:</strong> {movie.vote_average || "N/A"}
+              </p>
+            )}
+            {/* Rating Section */}
             <div className="rating-section mt-4">
               <strong>Your Rating:</strong>
               <RatingStars rating={rating} setRating={setRating} editable />
@@ -209,6 +230,7 @@ const MainMovie = () => {
               )}
             </div>
 
+            {/* Comments Section */}
             <div className="comments-section mt-6">
               <h3 className="text-2xl font-bold mb-4">Comments</h3>
               {comments.map((comment) => (
@@ -221,7 +243,6 @@ const MainMovie = () => {
                     customUser={{ username: comment.user.username }}
                     size={40}
                   />
-
                   <div className="flex flex-col">
                     <span className="font-bold text-gray-900 dark:text-white">
                       {comment.user.username}
